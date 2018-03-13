@@ -1,0 +1,9 @@
+{
+  "name": "learning-typescript-with-jest",
+  "version": "1.0.0",
+  "description": "learning and test typescript",
+  "scripts": {
+  },
+  "author": "gongzza <gz.us.to@gmail.com>",
+  "license": "MIT"
+}
