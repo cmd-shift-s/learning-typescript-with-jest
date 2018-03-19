@@ -16,14 +16,11 @@
   },
   "jest": {
     "transform": {
-      "^.+\\.tsx?$": "ts-jest"
+      "^.+\\.ts$": "ts-jest"
     },
     "testRegex": "\\.test\\.ts$",
     "moduleFileExtensions": [
-      "ts",
-      "js",
-      "json",
-      "node"
+      "ts", "js"
     ],
     "globals": {
       "ts-jest": {
