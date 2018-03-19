@@ -4,30 +4,41 @@ import * as tmp from 'tmp'
 
 tmp.setGracefulCleanup()
 
-export function compile(code: string, options?: ts.CompilerOptions): string[] {
-  const file = tmp.fileSync({postfix: '.ts'})
-  fs.writeSync(file.fd, code)
+export function compile(code: string, options?: ts.CompilerOptions): Promise<string[]> {
+  return new Promise<string[]>(
+    (resolve, reject) => {
+      tmp.file({postfix: '.ts'}, (err: Error, path: string, fd: number, cleanupCallback: Function) => {
+        if (err) throw reject(err)
 
-  const servicesHost: ts.LanguageServiceHost = {
-    getScriptFileNames: () => [file.name],
-    getScriptVersion: () => '1',
-    getScriptSnapshot: (fileName) => {
-      if (!fs.existsSync(fileName)) {
-          return undefined;
-      }
+        fs.write(fd, code, (err: Error) => {
+          if (err) throw reject(err)
 
-      return ts.ScriptSnapshot.fromString(fs.readFileSync(fileName).toString());
-    },
-    getCurrentDirectory: () => process.cwd(),
-    getCompilationSettings: () => options,
-    getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options),
-    fileExists: ts.sys.fileExists,
-    readFile: ts.sys.readFile,
-    readDirectory: ts.sys.readDirectory,
-  };
+          const servicesHost: ts.LanguageServiceHost = {
+            getScriptFileNames: () => [path],
+            getScriptVersion: () => '1',
+            getScriptSnapshot: (fileName) => {
+              if (!fs.existsSync(fileName)) {
+                  return undefined;
+              }
 
-  const service = ts.createLanguageService(servicesHost)
-  return service.getCompilerOptionsDiagnostics()
-    .concat(service.getSemanticDiagnostics(file.name))
-    .map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'))
+              return ts.ScriptSnapshot.fromString(fs.readFileSync(fileName).toString());
+            },
+            getCurrentDirectory: () => ts.sys.getCurrentDirectory(),
+            getCompilationSettings: () => options,
+            getDefaultLibFileName: (options) => ts.getDefaultLibFilePath(options),
+            fileExists: ts.sys.fileExists,
+            readFile: ts.sys.readFile,
+            readDirectory: ts.sys.readDirectory,
+          };
+
+          const service = ts.createLanguageService(servicesHost)
+          const allDiagnostics = service.getCompilerOptionsDiagnostics()
+            .concat(service.getSemanticDiagnostics(path))
+            .map(diagnostic => ts.flattenDiagnosticMessageText(diagnostic.messageText, '\n'))
+
+          resolve(allDiagnostics)
+        })
+      })
+    }
+  )
 }
