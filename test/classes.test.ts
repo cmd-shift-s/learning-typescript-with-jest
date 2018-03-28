@@ -119,4 +119,127 @@ describe('Classes', () => {
     // dad.name = 'Man with the 3-piece suit'
     // Cannot assign to 'name' because it is a constant or a read-only property.
   })
+
+  /**
+   * Accessors are only available when targeting ECMAScript 5 and higher.
+   */
+  test('Accessors', () => {
+    let passcode = 'secret passcode'
+    class Employee {
+      private _fullName: string
+
+      get fullName(): string {
+        return this._fullName
+      }
+
+      set fullName(newName: string) {
+        if (passcode && passcode == 'secret passcode') {
+          this._fullName = newName
+        } else {
+          throw new Error('Unauthorized')
+        }
+      }
+    }
+    let employee = new Employee()
+
+    employee.fullName = 'Bob Smith'
+    expect(employee.fullName).toBe('Bob Smith')
+
+    passcode = ''
+    expect(() => {
+      employee.fullName = 'Alex'
+    }).toThrowError('Unauthorized')
+    expect(employee.fullName).not.toBe('Alex')
+  })
+
+  test('Static Properties', () => {
+    class Grid {
+      static origin = {x: 0, y: 0}
+      constructor(public scale: number) {}
+      calculateDistanceFromOrigin(point: {x: number, y: number}) {
+        const xDist = (point.x - Grid.origin.x)
+        const yDist = (point.y - Grid.origin.y)
+        return Math.sqrt(xDist * xDist + yDist * yDist) / this.scale
+      }
+    }
+    let grid1 = new Grid(1.0) // 1x scale
+    let grid2 = new Grid(5.0) // 5x scale
+
+    expect(grid1.calculateDistanceFromOrigin({x: 10, y: 10}).toFixed(1)).toBe('14.1')
+    expect(grid2.calculateDistanceFromOrigin({x: 10, y: 10}).toFixed(1)).toBe('2.8')
+  })
+
+  test('Abstract Classes', () => {
+    abstract class Department {
+      constructor(public name: string) {}
+
+      printName(): string {
+        return `Department name: ${this.name}`
+      }
+
+      abstract printMeeting(): string // must be implemented in derived classes
+    }
+
+    class AccountingDepartment extends Department {
+      constructor() {
+        super('Accounting and Auditing')
+      }
+
+      printMeeting(): string {
+        return 'The Accounting Department meets each monday at 10am.'
+      }
+
+      generateReports(): string {
+        return 'Generating accounting reports...'
+      }
+    }
+
+    let department: Department
+    // department = new Department()
+    // Cannot create an instance of an abstract class.
+    department = new AccountingDepartment()
+    expect(department.name).toBe('Accounting and Auditing')
+
+    // department.generateReports()
+    // Property 'generateReports' does not exist on type 'Department'.
+  })
+
+  test('Advanced Techniques', () => {
+    class Greeter {
+      static standardGreeting = 'Hello, there'
+      greeting: string
+      greet() {
+        return this.greeting
+          ? `Hello, ${this.greeting}`
+          : Greeter.standardGreeting
+      }
+    }
+
+    let greeter1: Greeter
+    greeter1 = new Greeter()
+    expect(greeter1.greet()).toBe('Hello, there')
+
+    greeter1.greeting = 'guys'
+    expect(greeter1.greet()).toBe('Hello, guys')
+
+    let greeterMaker: typeof Greeter = Greeter
+    greeterMaker.standardGreeting = 'Hey there!'
+    let greeter2: Greeter = new greeterMaker()
+    expect(greeter2.greet()).toBe('Hey there!')
+
+    expect(Greeter.standardGreeting).toBe('Hey there!')
+  })
+
+  test('Using a class as an interface', () => {
+    class Point {
+      x: number
+      y: number
+    }
+
+    interface Point3D extends Point {
+      z: number
+    }
+
+    let point3d: Point3D = {x: 1, y: 2, z: 3}
+  })
 })
