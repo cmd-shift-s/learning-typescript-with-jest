@@ -169,6 +169,7 @@ describe('Functions', () => {
         }
       }
 
+
       let uiElement: UIElement = {
         addClickListener(onclick): void {}
       }
@@ -176,6 +177,39 @@ describe('Functions', () => {
       // uiElement.addClickListener(h.onClickBad)
       // The 'this' types of each signature are incompatible.
       uiElement.addClickListener(h.onClickGood)
+      uiElement.addClickListener((e: Event) => {
+        this.info = e.type
+      })
+    })
+
+    test('Overloads', () => {
+      const suits = ['hearts', 'spades', 'clubs', 'diamonds']
+
+      interface Card {
+        suit: string
+        card: number
+      }
+      function pickCard(x: Card[]): number
+      function pickCard(x: number): Card
+      function pickCard(x): any {
+        if (typeof x == 'object') {
+          return Math.floor(Math.random() * x.length)
+        } else if (typeof x == 'number') {
+          let pickedSuit = Math.floor(x / 13)
+          return {
+            suit: suits[pickedSuit],
+            card: x % 13
+          }
+        }
+      }
+
+      let myDeck = [{suit: 'diamonds', card: 2}, {suit: 'spades', card: 10}, {suit: 'hearts', card: 4}]
+      let pickedCard1 = myDeck[pickCard(myDeck)]
+      expect(myDeck).toContain(pickedCard1)
+
+      let pickedCard2 = pickCard(15)
+      expect(pickedCard2.suit).toBe('spades')
+      expect(pickedCard2.card).toBe(2)
     })
   })
 })
