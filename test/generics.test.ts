@@ -71,4 +71,63 @@ describe('Generics', () => {
       expect(stringNumeric.add(stringNumeric.zeroValue, 'test')).toBe('test')
     }
   })
+
+  describe('Generic Constraints', () => {
+    test('Generic Constraints', () => {
+      interface Lengthwise {
+          length: number
+      }
+
+      function loggingIdentity<T extends Lengthwise>(arg: T): T {
+        // console.log(arg.length) // OK
+        return arg
+      }
+
+      // loggingIdentity(3)
+      // Argument of type '3' is not assignable to parameter of type 'Lengthwise'.
+      const val = {length: 10, value: 3}
+      expect(loggingIdentity(val)).toEqual(val)
+    })
+
+    test('Using Type Parameters in Generic Constraints', () => {
+      function getProperty<T, K extends keyof T>(obj: T, key: K) {
+        return obj[key]
+      }
+      let x = {a: 1, b: 2, c: 3, d: 4}
+      expect(getProperty(x, "a")).toBe(1)
+      // getProperty(x, "e")
+      // Argument of type "'e'" is not assignable to parameter of type ""a"|"b"|"c"|"d"".
+    })
+
+    test('Using Class Types in generics', () => {
+      function create<T>(c: {new(): T}): T {
+          return new c()
+      }
+
+      class BeeKeeper {
+        hasMask: boolean = false
+      }
+      class ZooKeeper {
+        nametag: string = ''
+      }
+      class Animal {
+        numLegs: number = 0
+      }
+      class Bee extends Animal {
+        keeper = new BeeKeeper()
+      }
+      class Lion extends Animal {
+        keeper = new ZooKeeper()
+      }
+      function createInstance<A extends Animal>(c: new () => A): A {
+        return new c()
+      }
+
+      const bee = createInstance(Bee)
+      expect(bee.keeper).toHaveProperty('hasMask')
+
+      const lion = createInstance(Lion)
+      expect(lion.keeper).toHaveProperty('nametag')
+    })
+  })
 })
